@@ -105,6 +105,21 @@ async function fetchAgentTraces() {
   renderDashboardActivity(state.agentTraces.slice(0, 5));
 }
 
+function toggleHeaderPassword() {
+  state.headerPwVisible = !state.headerPwVisible;
+  const credPw = document.getElementById("headerCredPassword");
+  const btn = document.getElementById("btnHeaderPwToggle");
+  if (credPw && btn) {
+    if (state.headerPwVisible) {
+      credPw.innerText = state.learner?.password || "skilldev@2026";
+      btn.innerText = "Hide";
+    } else {
+      credPw.innerText = "••••••••••••";
+      btn.innerText = "Show";
+    }
+  }
+}
+
 // Global Re-render
 function renderAll() {
   renderHeaderAndMetrics();
@@ -153,6 +168,14 @@ function renderHeaderAndMetrics() {
   document.getElementById("headerRoleTitle").innerText = roleTitle;
   document.getElementById("headerReadiness").innerText = readiness;
   document.getElementById("headerWeeklyHours").innerText = weeklyHours;
+
+  const credName = document.getElementById("headerCredName");
+  if (credName) credName.innerText = state.learner.name || "Alex Chen";
+  const credEmail = document.getElementById("headerCredEmail");
+  if (credEmail) credEmail.innerText = state.learner.email || "alex.chen@gmail.com";
+  const credPw = document.getElementById("headerCredPassword");
+  if (credPw && !state.headerPwVisible) credPw.innerText = "••••••••••••";
+  else if (credPw) credPw.innerText = state.learner.password || "skilldev@2026";
 
   document.getElementById("dashRoleTitle").innerText = roleTitle;
   document.getElementById("dashRoleDesc").innerText = state.gapAnalysis?.target_role?.description || "Role description";

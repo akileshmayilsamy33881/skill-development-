@@ -25,6 +25,7 @@ def init_db():
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         email TEXT,
+        password TEXT DEFAULT 'skilldev@2026',
         target_role TEXT NOT NULL,
         weekly_hours INTEGER DEFAULT 10,
         bio TEXT,
@@ -400,12 +401,13 @@ def seed_db():
     # Goal: Full Stack Developer
     # Starting skills: Python, SQL, basic HTML
     c.execute("""
-    INSERT INTO learners (id, name, email, target_role, weekly_hours, bio, certifications, projects, interests)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO learners (id, name, email, password, target_role, weekly_hours, bio, certifications, projects, interests)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         "learner_1",
         "Alex Chen",
-        "alex.chen@example.edu",
+        "alex.chen@gmail.com",
+        "skilldev@2026",
         "full_stack_dev",
         12,
         "Aspiring full-stack engineer transitioning from data scripting into full-stack product development.",

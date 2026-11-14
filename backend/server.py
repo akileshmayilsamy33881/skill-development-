@@ -263,6 +263,8 @@ class SkillPathHandler(BaseHTTPRequestHandler):
             elif path == "/api/learner":
                 # Update learner info
                 name = body.get("name")
+                email = body.get("email")
+                password = body.get("password")
                 target_role = body.get("target_role")
                 weekly_hours = body.get("weekly_hours")
                 bio = body.get("bio")
@@ -274,6 +276,8 @@ class SkillPathHandler(BaseHTTPRequestHandler):
                 c.execute("""
                 UPDATE learners
                 SET name = COALESCE(?, name),
+                    email = COALESCE(?, email),
+                    password = COALESCE(?, password),
                     target_role = COALESCE(?, target_role),
                     weekly_hours = COALESCE(?, weekly_hours),
                     bio = COALESCE(?, bio),
@@ -281,7 +285,7 @@ class SkillPathHandler(BaseHTTPRequestHandler):
                     projects = COALESCE(?, projects),
                     interests = COALESCE(?, interests)
                 WHERE id = ?
-                """, (name, target_role, weekly_hours, bio, certifications, projects, interests, learner_id))
+                """, (name, email, password, target_role, weekly_hours, bio, certifications, projects, interests, learner_id))
                 conn.commit()
 
                 # Re-run pipeline to incorporate updates

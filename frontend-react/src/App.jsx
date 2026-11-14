@@ -17,6 +17,7 @@ export default function App() {
   const [showAddSkillModal, setShowAddSkillModal] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [assessmentResult, setAssessmentResult] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Assessment state
   const [currentAssessment, setCurrentAssessment] = useState(null);
@@ -239,10 +240,36 @@ export default function App() {
       {/* 2. APP HEADER */}
       <header className="app-header">
         <div className="logo-area">
-          <div className="logo-icon">⚡</div>
+          <div className="logo-icon">🚀</div>
           <div className="logo-text">
-            <h1>SkillPath AI</h1>
-            <p>React + Vite Architecture · Multi-Agent Orchestration</p>
+            <h1>SKILL DEVELOPMENT</h1>
+            <p>Adaptive Learning & Multi-Agent Orchestration</p>
+
+            {/* User Credentials Bar: Name, Gmail, Password */}
+            <div className="user-credentials-bar">
+              <div className="cred-badge">
+                <span className="cred-label">👤 NAME:</span>
+                <span className="cred-val">{learner?.name || 'Alex Chen'}</span>
+              </div>
+              <div className="cred-badge">
+                <span className="cred-label">✉️ GMAIL:</span>
+                <span className="cred-val">{learner?.email || 'alex.chen@gmail.com'}</span>
+              </div>
+              <div className="cred-badge">
+                <span className="cred-label">🔑 PASSWORD:</span>
+                <span className="cred-val font-mono" style={{ letterSpacing: showPassword ? 'normal' : '0.12em' }}>
+                  {showPassword ? (learner?.password || 'skilldev@2026') : '••••••••••••'}
+                </span>
+                <button
+                  type="button"
+                  className="btn-toggle-pw"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -488,6 +515,28 @@ export default function App() {
                           <option key={r.id} value={r.id}>{r.title}</option>
                         ))}
                       </select>
+                    </div>
+                  </div>
+                  <div className="grid-2" style={{ gap: '12px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Gmail Address</label>
+                      <input
+                        type="email"
+                        className="chat-input"
+                        style={{ width: '100%', marginTop: '4px' }}
+                        value={learner.email || 'alex.chen@gmail.com'}
+                        onChange={e => setLearner({ ...learner, email: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Password</label>
+                      <input
+                        type="text"
+                        className="chat-input font-mono"
+                        style={{ width: '100%', marginTop: '4px' }}
+                        value={learner.password || 'skilldev@2026'}
+                        onChange={e => setLearner({ ...learner, password: e.target.value })}
+                      />
                     </div>
                   </div>
                   <div>
