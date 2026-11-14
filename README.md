@@ -4,11 +4,27 @@ An intelligent, multi-agent web application that transforms a learner's current 
 
 ---
 
+## 🏗️ Multi-Agent Architecture
+
+```mermaid
+flowchart LR
+    A["👤 Learner Profile & Evidence"] --> B["Profile Agent"]
+    B --> C["Career Analyst Agent"]
+    D["📝 Assessment Studio"] --> E["Assessment Agent"]
+    C --> F["Roadmap Agent"]
+    E --> F
+    F --> G["Adaptive Learning Roadmap"]
+    G --> H["🤖 Grounded AI Mentor"]
+    F --> H
+```
+
+---
+
 ## 🌟 Key Features
 
 1. **Profile & Evidence Ingestion**:
    - Captures self-reported skills, projects, certifications, interests, and weekly study hours.
-   - Calculates **uncertainty** and discounts unverified self-ratings until backed by objective evidence or assessments.
+   - Calculates **uncertainty** ($1.0 - \text{confidence}$) and discounts unverified self-ratings until backed by objective evidence or assessments.
 
 2. **Transparent Gap Analysis**:
    - Uses the deterministic formula:
@@ -44,36 +60,67 @@ An intelligent, multi-agent web application that transforms a learner's current 
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## 🛠️ Technology Stack & Project Structure
 
-- **Backend**: Python 3 standard library (`http.server.ThreadingHTTPServer`, `sqlite3`, `json`). Zero external pip dependencies required.
-- **Database**: SQLite with relational foreign keys and complete audit trail.
-- **Frontend**: Clean single-page application (SPA) with responsive design, glassmorphic dark theme, progress meters, interactive quizzes, and chat interface.
-- **Multi-Agent Engine**:
-  - `ProfileAgent`: Ingests profile, assesses evidence credibility, computes uncertainty.
-  - `CareerAnalystAgent`: Matches profile against role requirements, calculates transparent gap scores.
-  - `AssessmentAgent`: Evaluates quiz submissions, diagnoses weak subtopics, updates verified proficiency.
-  - `RoadmapAgent`: Orders milestones, enforces prerequisite hierarchy, handles safety holds and remedial drills.
-  - `MentorAgent`: Synthesizes grounded mentorship advice and technical explanations.
-  - `AgentOrchestrator`: Coordinates the full pipeline and logs timestamped execution traces.
+```
+skillpath-ai/
+├── backend/
+│   ├── server.py              # REST API server (ThreadingHTTPServer)
+│   ├── agents.py              # 5-Agent pipeline + Orchestrator
+│   ├── db.py                  # SQLite schema, seed data, & prerequisite graph
+│   └── skillpath.db           # SQLite database
+├── frontend-react/            # ⚡ Modern React 18 + Vite Single Page App
+│   ├── src/
+│   │   ├── App.jsx            # Main application with 7 interactive tabs
+│   │   ├── index.css          # Design system, glassmorphism, glowing badges
+│   │   └── main.jsx           # React DOM root
+│   ├── package.json
+│   └── vite.config.js         # API proxy to backend
+├── docs/
+│   └── ARCHITECTURE.md        # Comprehensive multi-agent specification
+├── run.sh                     # Full-stack launcher script
+└── README.md
+```
+
+- **Frontend**: **React 18** with **Vite 5** (fast build, hot module replacement, dark-mode glassmorphic theme).
+- **Backend**: Python 3 standard library (`http.server.ThreadingHTTPServer`, `sqlite3`, `json`). Zero pip dependencies required.
+- **Database**: SQLite with relational schema and full audit log.
 
 ---
 
 ## 🚀 Quick Start Guide
 
-### 1. Launch the Server
+### Option 1: Full-Stack Launcher (Recommended)
 ```bash
-cd /Users/akileshm/.gemini/antigravity/scratch/skillpath-ai/backend
+./run.sh
+```
+*Builds the React frontend and starts the server on `http://localhost:8000`.*
+
+---
+
+### Option 2: Run Separately (Dev Mode with Hot Reloading)
+
+**1. Start the Backend Server:**
+```bash
+cd backend
 python3 server.py 8000
 ```
 
-### 2. Access the Application
-Open your browser and navigate to:
-```
-http://localhost:8000
+**2. Start the Vite React Dev Server:**
+```bash
+cd frontend-react
+npm install
+npm run dev
 ```
 
-### 3. Demo Walkthrough for Judges
+Open your browser to:
+- **Vite React Dev Server**: `http://localhost:5173`
+- **Backend Server**: `http://localhost:8000`
+
+---
+
+## 🏆 Demo Walkthrough for Judges
+
 1. **Explore the Dashboard**: Notice Alex Chen's profile with **26.4% Readiness** for Full Stack Developer.
 2. **Review Career Match & Gaps**: Note that JavaScript, React, and Node.js are flagged as critical gaps.
 3. **Trigger Adaptive Failure**: Click **`2. ⚠️ Fail JS (<50%) [Adaptive Hold]`** in the top demo bar.
