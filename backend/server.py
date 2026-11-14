@@ -22,7 +22,9 @@ from agents import (
     AgentOrchestrator
 )
 
-STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+REACT_DIST = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend-react", "dist")
+STATIC_FALLBACK = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+STATIC_DIR = REACT_DIST if os.path.exists(REACT_DIST) else STATIC_FALLBACK
 
 class SkillPathHandler(BaseHTTPRequestHandler):
     def send_cors_headers(self):
