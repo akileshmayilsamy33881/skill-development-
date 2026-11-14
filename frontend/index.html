@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillPath AI — Adaptive Learning Plan & Agent Orchestration</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%220%22%20100%22%20100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Hackathon Demo Control Bar -->
+  <aside class="demo-bar" aria-label="Demo Presets">
+    <div class="demo-title">
+      <span>🏆 Hackathon Demo Presets</span>
+    </div>
+    <div class="demo-btn-group">
+      <button class="btn-demo" onclick="triggerScenario('load_sample')" title="Reload Alex Chen sample profile (Full Stack Dev)">
+        <span>1. 👤 Load Sample Scenario</span>
+      </button>
+      <button class="btn-demo" onclick="triggerScenario('simulate_fail_js')" title="Learner scores 25% on JavaScript functions -> React locks & remedial drill added">
+        <span>2. ⚠️ Fail JS (<50%) [Adaptive Hold]</span>
+      </button>
+      <button class="btn-demo" onclick="triggerScenario('simulate_pass_js')" title="Learner scores 100% on JavaScript -> React unlocks & readiness jumps">
+        <span>3. ✅ Pass JS (100%) [Unlock]</span>
+      </button>
+      <button class="btn-demo" onclick="triggerScenario('switch_data_analyst')" title="Switch target career to Data Analyst -> Roadmap recalculates">
+        <span>4. 🔄 Switch: Data Analyst</span>
+      </button>
+      <button class="btn-demo" onclick="triggerScenario('switch_full_stack')" title="Switch target career back to Full Stack Developer">
+        <span>5. 🔄 Switch: Full Stack</span>
+      </button>
+      <button class="btn-demo danger" onclick="triggerScenario('reset')" title="Reset database to clean seed state">
+        <span>🔁 Reset DB</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="logo-area">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">
+        <h1>SkillPath AI</h1>
+        <p>Measurable Learning Plans & Multi-Agent Orchestration</p>
+      </div>
+    </div>
+
+    <div class="header-stats">
+      <div class="stat-pill" onclick="openRoleModal()" style="cursor: pointer;" title="Click to change target role">
+        <span style="color: var(--text-muted);">Target:</span>
+        <strong id="headerRoleTitle">Full Stack Developer</strong>
+        <span class="badge badge-primary" style="font-size: 0.68rem; margin-left: 4px;">Change ▾</span>
+      </div>
+
+      <div class="stat-pill">
+        <span style="color: var(--text-muted);">Career Readiness:</span>
+        <strong id="headerReadiness">--%</strong>
+      </div>
+
+      <div class="stat-pill">
+        <span style="color: var(--text-muted);">Pace:</span>
+        <strong id="headerWeeklyHours">12 hrs/wk</strong>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-nav" aria-label="Main Navigation">
+    <button class="tab-btn active" data-tab="dashboard">
+      <span>📊</span> Dashboard
+    </button>
+    <button class="tab-btn" data-tab="profile">
+      <span>👤</span> Profile & Evidence
+    </button>
+    <button class="tab-btn" data-tab="gap-analysis">
+      <span>🎯</span> Career Match & Gaps
+    </button>
+    <button class="tab-btn" data-tab="roadmap">
+      <span>🗺️</span> Learning Roadmap
+    </button>
+    <button class="tab-btn" data-tab="assessment">
+      <span>📝</span> Skill Assessment
+    </button>
+    <button class="tab-btn" data-tab="mentor">
+      <span>🤖</span> AI Mentor
+    </button>
+    <button class="tab-btn" data-tab="inspector">
+      <span>🔬</span> Agent Inspector
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- Dynamic Adaptation Alert (Shows when plan was adaptively altered) -->
+    <div id="adaptationAlert" class="adaptation-banner" style="display: none;">
+      <div class="adaptation-text">
+        <div class="pulse-indicator"></div>
+        <div>
+          <strong id="adaptationAlertTitle" style="color: #fbbf24;">Adaptive Plan Revision Active</strong>
+          <p id="adaptationAlertDesc" style="font-size: 0.85rem; color: #e2e8f0; margin-top: 2px;">
+            Based on your recent assessment, the Roadmap Agent has dynamically held back dependent modules and inserted targeted remedial drills.
+          </p>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-secondary" onclick="switchTab('roadmap')" style="padding: 6px 14px; font-size: 0.8rem;">
+          View Adapted Roadmap →
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <div class="grid-2" style="margin-bottom: 24px;">
+        <!-- Card 1: Target Role & Readiness -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>🎯 Target Career Goal</span>
+            </div>
+            <button class="btn btn-secondary" onclick="openRoleModal()" style="padding: 4px 10px; font-size: 0.75rem;">
+              Switch Goal
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div>
+              <h2 id="dashRoleTitle" style="font-size: 1.4rem; font-weight: 800; color: #fff;">Full Stack Developer</h2>
+              <p id="dashRoleDesc" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                Builds end-to-end web applications across frontends, server APIs, and databases.
+              </p>
+            </div>
+            <div style="text-align: right;">
+              <span id="dashReadinessBadge" class="badge badge-warning" style="font-size: 0.9rem; padding: 6px 14px;">
+                --% Readiness
+              </span>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+              <span>Role Mastery Progress</span>
+              <span id="dashReadinessVal">--%</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div id="dashReadinessBar" class="progress-bar-fill primary" style="width: 25%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Current Learning Step -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>⚡ Active Learning Focus</span>
+            </div>
+            <span id="dashActiveStepStatus" class="badge badge-primary">In Progress</span>
+          </div>
+
+          <div id="dashActiveStepContent">
+            <h3 id="dashActiveSkillName" style="font-size: 1.2rem; color: #a5b4fc; font-weight: 700;">HTML & CSS</h3>
+            <p id="dashActiveStepNote" style="font-size: 0.88rem; color: #d1d5db; margin: 8px 0 16px 0;">
+              Verify HTML/CSS fundamentals by completing the responsive developer portfolio.
+            </p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button id="dashActiveActionBtn" class="btn btn-success" onclick="switchTab('roadmap')">
+                Continue Activity →
+              </button>
+              <button class="btn btn-secondary" onclick="openAssessmentForCurrentSkill()">
+                Assess Skill Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Row -->
+      <div class="grid-4" style="margin-bottom: 24px;">
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Verified Skills</div>
+          <div id="dashMetricVerified" style="font-size: 1.6rem; font-weight: 800; color: #10b981; margin-top: 4px;">1</div>
+          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">Supported by assessment/projects</div>
+        </div>
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Skill Gaps Remaining</div>
+          <div id="dashMetricGaps" style="font-size: 1.6rem; font-weight: 800; color: #f59e0b; margin-top: 4px;">5</div>
+          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">Critical & recommended gaps</div>
+        </div>
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Estimated Effort</div>
+          <div id="dashMetricEffort" style="font-size: 1.6rem; font-weight: 800; color: #6366f1; margin-top: 4px;">62 hrs</div>
+          <div id="dashMetricWeeks" style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">~5.2 weeks at 12 hrs/wk</div>
+        </div>
+        <div class="card" style="padding: 16px;">
+          <div style="font-size: 0.78rem; color: var(--text-muted);">Active Holds / Remedial</div>
+          <div id="dashMetricHolds" style="font-size: 1.6rem; font-weight: 800; color: #ef4444; margin-top: 4px;">0</div>
+          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">Downstream safety holds</div>
+        </div>
+      </div>
+
+      <!-- Agent Activity Feed -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🤖 Recent Agent Reasoning & Orchestration</span>
+          </div>
+          <button class="btn btn-secondary" onclick="switchTab('inspector')" style="font-size: 0.75rem; padding: 4px 10px;">
+            Open Pipeline Inspector
+          </button>
+        </div>
+        <div id="dashAgentActivityList" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: PROFILE & EVIDENCE -->
+    <section id="tab-profile" class="tab-panel">
+      <div class="grid-2" style="margin-bottom: 24px;">
+        <!-- Learner Info Form -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>👤 Learner Identity & Goals</span>
+            </div>
+            <button class="btn btn-primary" onclick="saveLearnerProfile()" style="font-size: 0.8rem; padding: 5px 12px;">
+              Save Profile
+            </button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Full Name</label>
+              <input type="text" id="profName" class="chat-input" value="Alex Chen" style="width: 100%;">
+            </div>
+
+            <div class="grid-2" style="gap: 12px;">
+              <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Weekly Study Commitment</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <input type="number" id="profWeeklyHours" class="chat-input" value="12" min="1" max="60" style="width: 80px;">
+                  <span style="font-size: 0.85rem; color: var(--text-dim);">hours/week</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Target Career Role</label>
+                <select id="profTargetRole" class="chat-input" style="width: 100%;" onchange="handleRoleSelectChange(this.value)">
+                  <!-- Populated by JS -->
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Career Bio & Background</label>
+              <textarea id="profBio" class="chat-input" rows="3" style="width: 100%; resize: vertical;">Aspiring full-stack engineer transitioning from data scripting into full-stack product development.</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evidence & Portfolio Details -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>📜 Certifications & Evidence Portfolio</span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Certifications</label>
+              <textarea id="profCerts" class="chat-input" rows="2" style="width: 100%; resize: vertical;">Python for Everybody (Coursera Specialization), Database Foundations Certificate</textarea>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Completed Projects</label>
+              <textarea id="profProjects" class="chat-input" rows="2" style="width: 100%; resize: vertical;">Automated CSV Invoice Cleaner (Python script), Student Grades Portal (CLI + SQLite)</textarea>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Learning Interests</label>
+              <input type="text" id="profInterests" class="chat-input" style="width: 100%;" value="Modern web apps, full-stack architectures, interactive dashboards, cloud deployment">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>💼 Current Skills & Evidence Confidence</span>
+          </div>
+          <button class="btn btn-secondary" onclick="openAddSkillModal()" style="font-size: 0.8rem; padding: 5px 12px;">
+            + Add / Claim Skill
+          </button>
+        </div>
+
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+          Note: SkillPath AI estimates your competency from tangible evidence and assessment scores rather than self-ratings alone. High uncertainty is flagged for unverified claims.
+        </p>
+
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Skill</th>
+                <th>Category</th>
+                <th>Self Rating</th>
+                <th>Verified Level</th>
+                <th>Confidence & Uncertainty</th>
+                <th>Evidence Record</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="profileSkillsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: CAREER MATCH & GAP ANALYSIS -->
+    <section id="tab-gap-analysis" class="tab-panel">
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <span>🎯 Gap Analysis: Target Role Requirements vs Current Evidence</span>
+            </div>
+            <p id="gapRoleSubtitle" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              Formula: <code>gap = role_required_level - learner_estimated_level</code>
+            </p>
+          </div>
+          <button class="btn btn-secondary" onclick="openRoleModal()" style="font-size: 0.8rem;">
+            Change Target Role
+          </button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Required Skill</th>
+                <th>Category</th>
+                <th>Target Level</th>
+                <th>Learner Level</th>
+                <th>Gap Score</th>
+                <th>Priority</th>
+                <th>Severity</th>
+                <th>Agent Rationale ("Why is this missing/required?")</th>
+                <th>Next Step</th>
+              </tr>
+            </thead>
+            <tbody id="gapTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: LEARNING ROADMAP -->
+    <section id="tab-roadmap" class="tab-panel">
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <span>🗺️ Personalized Adaptive Roadmap</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              Ordered by prerequisite hierarchy and role priorities. Automatically adapts when you assess skills or adjust goals.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-secondary" onclick="reorchestratePipeline()" style="font-size: 0.8rem;">
+              ⚡ Regenerate Roadmap
+            </button>
+          </div>
+        </div>
+
+        <div id="roadmapSummaryBanner" style="display: flex; gap: 20px; flex-wrap: wrap; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; margin-bottom: 20px;">
+          <div><span style="color: var(--text-muted);">Total Milestones:</span> <strong id="roadTotalCount">7</strong></div>
+          <div><span style="color: var(--text-muted);">Estimated Effort:</span> <strong id="roadTotalHours">58 hrs</strong></div>
+          <div><span style="color: var(--text-muted);">Timeline:</span> <strong id="roadTotalWeeks">~4.8 weeks</strong></div>
+          <div><span style="color: var(--text-muted);">Held Back Modules:</span> <strong id="roadLockedCount" style="color: #ef4444;">1</strong></div>
+        </div>
+
+        <!-- Roadmap Timeline Items -->
+        <div id="roadmapTimeline" class="timeline">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: SKILL ASSESSMENT STUDIO -->
+    <section id="tab-assessment" class="tab-panel">
+      <div class="grid-2" style="margin-bottom: 20px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>📝 Assessment Selector</span>
+            </div>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+            Objective quizzes evaluate true competency and subtopic mastery. Your answers directly revise your verified confidence and update the roadmap.
+          </p>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="assessmentSkillSelect" class="chat-input" style="flex-grow: 1;" onchange="loadSelectedAssessment(this.value)">
+              <option value="javascript">JavaScript Core Competency</option>
+              <option value="html_css">HTML5 & Modern CSS Layout</option>
+              <option value="sql">SQL Querying & Relational Modeling</option>
+              <option value="python">Python Syntax & Core Idioms</option>
+              <option value="react">React Fundamentals & Hooks</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadSelectedAssessment(document.getElementById('assessmentSkillSelect').value)">
+              Load Test
+            </button>
+          </div>
+        </div>
+
+        <div class="card" id="assessmentMetaCard">
+          <div class="card-header">
+            <div class="card-title">
+              <span id="assessmentMetaTitle">JavaScript Assessment</span>
+            </div>
+            <span id="assessmentMetaPassScore" class="badge badge-primary">Pass: 65%</span>
+          </div>
+          <p id="assessmentMetaDesc" style="font-size: 0.85rem; color: #d1d5db;">
+            Validates foundational ES6 syntax, functions & lexical scope, array mutations, and asynchronous execution.
+          </p>
+          <div id="assessmentLastResultBanner" style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+            Status: Unassessed
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz Form Container -->
+      <div id="quizContainer">
+        <!-- Dynamically rendered questions -->
+      </div>
+
+      <div id="quizSubmitRow" style="display: none; text-align: right; margin-top: 20px;">
+        <button class="btn btn-success" style="font-size: 1rem; padding: 10px 24px;" onclick="submitQuizAnswers()">
+          Submit Assessment for AI Evaluation ➔
+        </button>
+      </div>
+    </section>
+
+    <!-- TAB 6: AI MENTOR -->
+    <section id="tab-mentor" class="tab-panel">
+      <div class="chat-window">
+        <div class="chat-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></div>
+            <div>
+              <strong style="font-size: 0.95rem; color: #fff;">SkillPath AI Mentor</strong>
+              <p style="font-size: 0.72rem; color: var(--text-muted);">Grounded in learner profile, role requirements & active roadmap</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <span class="badge badge-success" style="font-size: 0.68rem;">● Profile Connected</span>
+            <span class="badge badge-primary" style="font-size: 0.68rem;">● Roadmap Synced</span>
+          </div>
+        </div>
+
+        <div id="mentorChatMessages" class="chat-messages">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Quick Prompts Row -->
+        <div class="quick-prompts">
+          <span style="font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center;">Quick asks:</span>
+          <button class="prompt-pill" onclick="sendQuickPrompt('Why is React locked in my plan?')">Why is React locked?</button>
+          <button class="prompt-pill" onclick="sendQuickPrompt('Why did my learning plan change?')">Why did my plan change?</button>
+          <button class="prompt-pill" onclick="sendQuickPrompt('How should I practice JavaScript functions and closures?')">How to practice JS functions?</button>
+          <button class="prompt-pill" onclick="sendQuickPrompt('What is my recommended next step?')">What is my next step?</button>
+          <button class="prompt-pill" onclick="sendQuickPrompt('What happens if I switch to Data Analyst?')">Switch to Data Analyst?</button>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="mentorInput" class="chat-input" placeholder="Ask your AI mentor anything about your roadmap, assessments, or study guidance..." onkeydown="if(event.key==='Enter') sendMentorMessage()">
+          <button class="btn btn-primary" onclick="sendMentorMessage()">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 7: AGENT PIPELINE INSPECTOR -->
+    <section id="tab-inspector" class="tab-panel">
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <span>🔬 Multi-Agent Pipeline Visualizer</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              Inspect each autonomous agent's inputs, structured outputs, and reasoning steps in real-time.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="reorchestratePipeline()" style="font-size: 0.8rem;">
+            Run Full Pipeline Now
+          </button>
+        </div>
+
+        <!-- Flow diagram -->
+        <div class="agent-flow">
+          <div class="agent-node" onclick="filterAgentTraces('Profile Agent')">
+            <div class="agent-node-title">1. Profile Agent</div>
+            <div class="agent-node-desc">Evidence Extraction & Uncertainty</div>
+          </div>
+          <div class="agent-flow-arrow">➔</div>
+          <div class="agent-node" onclick="filterAgentTraces('Career Analyst Agent')">
+            <div class="agent-node-title">2. Career Analyst</div>
+            <div class="agent-node-desc">Gap Scoring & Role Matching</div>
+          </div>
+          <div class="agent-flow-arrow">➔</div>
+          <div class="agent-node" onclick="filterAgentTraces('Assessment Agent')">
+            <div class="agent-node-title">3. Assessment Agent</div>
+            <div class="agent-node-desc">Diagnostics & Weak Area Flags</div>
+          </div>
+          <div class="agent-flow-arrow">➔</div>
+          <div class="agent-node" onclick="filterAgentTraces('Roadmap Agent')">
+            <div class="agent-node-title">4. Roadmap Agent</div>
+            <div class="agent-node-desc">Prerequisites & Adaptive Holds</div>
+          </div>
+          <div class="agent-flow-arrow">➔</div>
+          <div class="agent-node" onclick="filterAgentTraces('Mentor Agent')">
+            <div class="agent-node-title">5. Mentor Agent</div>
+            <div class="agent-node-desc">Grounded Advisory & Guidance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Traces Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📜 Live Agent Trace Log</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Real-time database audit log</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th>Action Step</th>
+                <th>Timestamp</th>
+                <th>Natural Language Explanation</th>
+                <th>Payloads</th>
+              </tr>
+            </thead>
+            <tbody id="agentTracesTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ROLE SWITCHER -->
+  <div id="roleModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; color: #fff;">Switch Target Career Goal</h3>
+        <button class="modal-close" onclick="closeRoleModal()">✕</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+        Selecting a new role immediately triggers the Career Analyst and Roadmap Agents to recalculate gaps and re-sequence your learning path.
+      </p>
+      <div id="roleListContainer" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT SKILL -->
+  <div id="addSkillModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; color: #fff;">Add or Report a Skill</h3>
+        <button class="modal-close" onclick="closeAddSkillModal()">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Select Skill</label>
+          <select id="newSkillId" class="chat-input" style="width: 100%;">
+            <option value="html_css">HTML & CSS</option>
+            <option value="javascript">JavaScript Fundamentals</option>
+            <option value="react">React & Component Architecture</option>
+            <option value="nodejs">Node.js & Express REST APIs</option>
+            <option value="python">Python Programming</option>
+            <option value="sql">SQL & Relational Databases</option>
+            <option value="git">Git & Version Control</option>
+            <option value="docker">Docker & Containerization</option>
+            <option value="pandas">Pandas & Data Wrangling</option>
+            <option value="ml_basics">Machine Learning Fundamentals</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Self-Reported Proficiency (1 to 5)</label>
+          <input type="range" id="newSkillProf" min="1" max="5" step="0.5" value="3" style="width: 100%; accent-color: var(--primary);" oninput="document.getElementById('profValDisplay').innerText = this.value + '/5'">
+          <div style="text-align: right; font-size: 0.85rem; color: #a5b4fc;" id="profValDisplay">3/5</div>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Evidence / Verification Notes</label>
+          <input type="text" id="newSkillEvidence" class="chat-input" style="width: 100%;" placeholder="e.g. Built portfolio website; passed course quiz...">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button class="btn btn-secondary" onclick="closeAddSkillModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitNewSkill()">Save & Analyze</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ASSESSMENT RESULTS DETAIL -->
+  <div id="assessmentResultModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="resModalTitle" style="font-size: 1.2rem; color: #fff;">Assessment Results</h3>
+        <button class="modal-close" onclick="closeResultModal()">✕</button>
+      </div>
+
+      <div style="text-align: center; margin: 16px 0;">
+        <div id="resModalScoreBadge" style="font-size: 2.5rem; font-weight: 800; color: #10b981;">--%</div>
+        <div id="resModalPassStatus" class="badge badge-success" style="font-size: 0.85rem; margin-top: 6px;">Passed</div>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px; background: rgba(0,0,0,0.25);">
+        <h4 style="font-size: 0.9rem; color: #c7d2fe; margin-bottom: 6px;">Assessment Agent Diagnostic Feedback:</h4>
+        <p id="resModalFeedback" style="font-size: 0.88rem; color: #e2e8f0; line-height: 1.5;">--</p>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Subtopic Breakdown:</h4>
+        <div id="resModalSubtopicsList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" onclick="closeResultModal()">Close</button>
+        <button class="btn btn-primary" onclick="closeResultModal(); switchTab('roadmap');">
+          ⚡ View Roadmap Impact →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: JSON PAYLOAD INSPECTOR -->
+  <div id="jsonModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 id="jsonModalTitle" style="font-size: 1.1rem; color: #fff;">Agent Payload Detail</h3>
+        <button class="modal-close" onclick="closeJsonModal()">✕</button>
+      </div>
+      <div class="code-snippet" id="jsonModalContent" style="max-height: 60vh; overflow-y: auto;">
+        <!-- Formatted JSON -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
